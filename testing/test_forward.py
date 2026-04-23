@@ -5,11 +5,11 @@ from lib.vectors import StateVector, ParameterVector
 
 N = 100
 
-param = ParameterVector(N, starting_time = 30, starting_throttle=1, starting_angle=math.pi)
+param = ParameterVector(N, starting_time = 60, starting_throttle=1, starting_angle=2.6)
 
-initial_state = StateVector(0, 0, -500, 0)
+initial_state = StateVector(0, 0, 500, 0)
 
-Thrust = 500000
+Thrust = 1000000
 Mass = 45000
 
 Fuel_Consumption_Rate = 1
