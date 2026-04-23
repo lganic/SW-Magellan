@@ -20,7 +20,7 @@ def field(sv: StateVector):
 
 def drag(sv: StateVector):
 
-    velocity = math.sqrt(math.pow(sv.vx, 2) + math.pow(sv.vy, 2))
+    velocity = sv.v
 
     if velocity < 1e-4:
         return (0, 0)

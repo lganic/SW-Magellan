@@ -13,10 +13,11 @@ def sim(starting_state: StateVector, params: ParameterVector, engine_thrust: flo
     current_state = starting_state
     current_mass = starting_mass
 
+    starting_state.mass = starting_mass
+
     output = [starting_state.copy()]
 
     for theta, throttle in zip(params.theta_n, params.tau_n):
-
 
         thrust_mag = throttle * engine_thrust / current_mass
 
@@ -34,6 +35,8 @@ def sim(starting_state: StateVector, params: ParameterVector, engine_thrust: flo
         new_vy = current_state.vy + delta_t * (a_y_thrust + a_y_drag + a_y_field)
 
         current_state = StateVector(new_x, new_y, new_vx, new_vy)
+
+        current_state.mass = current_mass
 
         output.append(current_state)
 

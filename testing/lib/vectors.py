@@ -13,17 +13,28 @@ class StateVector:
         self.vx = vx
         self.vy = vy
 
+        self.mass = None
+
     def copy(self):
 
-        return StateVector(self.x, self.y, self.vx, self.vy)
+        out = StateVector(self.x, self.y, self.vx, self.vy)
+
+        out.mass = self.mass
+
+        return out
     
+    @property
+    def v(self):
+        # TODO: optimize
+        return math.sqrt(math.pow(self.vx, 2) + math.pow(self.vy, 2))
+
     def __repr__(self):
 
         return f'({self.x}, {self.y}, {self.vx}, {self.vy})'
 
 class ParameterVector:
 
-    def __init__(self, number_of_elements, starting_angle = math.pi / 2, starting_throttle = 1, starting_time = 60*60):
+    def __init__(self, number_of_elements, starting_angle = math.pi / 2, starting_throttle = 1, starting_time = 1 * 60):
 
         '''
         Create a state vector with a given size.
