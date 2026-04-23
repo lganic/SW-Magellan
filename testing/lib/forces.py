@@ -16,7 +16,7 @@ def field(sv: StateVector):
 
     y = sv.y
 
-    return (0, 1 + (ground_velocity / 100) - (g * R * R) / math.pow(y + R, 2))
+    return (0, 1 + (abs(ground_velocity) / 100) - (g * R * R) / math.pow(y + R, 2))
 
 def drag(sv: StateVector):
 
