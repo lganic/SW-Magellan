@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
+import math
 from lib.sim import sim
 from lib.vectors import StateVector, ParameterVector
 
 N = 100
 
-param = ParameterVector(N, starting_time = 30)
+param = ParameterVector(N, starting_time = 30, starting_throttle=1, starting_angle=math.pi)
 
-initial_state = StateVector(0, 0, 0, 0)
+initial_state = StateVector(0, 0, 500, 0)
 
 Thrust = 500000
 Mass = 45000
@@ -26,15 +27,15 @@ states = sim(
 # Extract data
 x = [s.x for s in states]
 y = [s.y for s in states]
-vx = [s.vx for s in states]
-vy = [s.vy for s in states]
+vx = [thrust * math.cos(angle) for angle, thrust in zip(param.theta_n, param.tau_n)] + [0]
+vy = [thrust * math.sin(angle) for angle, thrust in zip(param.theta_n, param.tau_n)] + [0]
 
 # Plot trajectory
 plt.figure(figsize=(8, 6))
 plt.plot(x, y, label="Trajectory", linewidth=2)
 
 # Quiver 
-plt.quiver(x, y, vx, vy, angles='xy', scale_units='xy', scale=1)
+plt.quiver(x, y, vx, vy, angles='xy', scale_units='xy', scale=2e-3)
 
 # Labels / formatting
 plt.xlabel("x")
