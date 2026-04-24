@@ -2,7 +2,7 @@ import math
 from typing import List
 from .vectors import StateVector, ParameterVector
 from .sim import sim
-from .partials import get_drag_partials
+from .partials import get_drag_partials, get_tf_partial
 from .obstacle import Obstacle
 from matplotlib import pyplot as plt
 import keyboard
@@ -83,6 +83,8 @@ def calculate_trajectory(
     ax.axis("equal")
     ax.legend()
 
+    lambda_b = 1e-3
+
     iteration = 0
 
     while not final_condition:
@@ -120,8 +122,8 @@ def calculate_trajectory(
 
             for obstacle in obstacles:
                 gradient = obstacle.get_gradient(states[n])
-                state_gradient[0] += gradient[0]
-                state_gradient[1] += gradient[1]
+                state_gradient[0] += lambda_b * gradient[0]
+                state_gradient[1] += lambda_b * gradient[1]
 
             lambdas[n] = state_gradient.copy()
 
@@ -164,7 +166,7 @@ def calculate_trajectory(
             grad_theta[n] += dot4(lambdas[n + 1], ds_dtheta)
             grad_tau[n] += dot4(lambdas[n + 1], ds_dtau)
 
-        lambda_mu = 1e-3
+        lambda_mu = 1e-4
 
         for n in range(N):
             if n > 0:
@@ -173,12 +175,34 @@ def calculate_trajectory(
                 grad_theta[n] -= 2 * lambda_mu * (params.theta_n[n + 1] - params.theta_n[n]) / (params.Delta_t ** 2)
 
         alpha_theta = 1e-8
-        alpha_tau = 1e-5
+        alpha_tau = 1e-15
+        alpha_mu = 1e-13
+
+        grad_Tf = get_tf_partial(
+            starting_state=starting_state,
+            params=params,
+            lambdas = lambdas,
+            engine_thrust=engine_thrust,
+            starting_mass=starting_mass,
+            fuel_consumption_rate=fuel_consumption_rate,
+            fuel_density=fuel_density
+        )
 
         for n in range(N):
             params.theta_n[n] -= alpha_theta * grad_theta[n]
             params.tau_n[n] = min(1.0, max(0.0, params.tau_n[n] - alpha_tau * grad_tau[n]))
 
+        smooth_sum = 0.0
+
+        for n in range(1, N):
+            dtheta = params.theta_n[n] - params.theta_n[n - 1]
+            smooth_sum += dtheta * dtheta
+
+        grad_Tf += lambda_mu * (-2.0 * smooth_sum / (params.Delta_t ** 3)) * (1.0 / N)
+
+        grad_mu = params.Tf * grad_Tf
+
+        params.Mu -= alpha_mu * grad_mu
 
         # --- update live preview ---
         x = [s.x for s in states]
@@ -186,8 +210,6 @@ def calculate_trajectory(
 
         theta = params.theta_n
         tau = params.tau_n
-
-        print(theta)
 
         u = [tau[n] * math.cos(theta[n]) for n in range(len(theta))]
         v = [tau[n] * math.sin(theta[n]) for n in range(len(theta))]
