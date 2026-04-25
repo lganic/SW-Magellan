@@ -26,4 +26,4 @@ class Ground(Obstacle):
         if state.y >= 0:
             return (0.0, 0.0)
 
-        return (0.0, -2 * state.y)
+        return (0.0, 2 * state.y)

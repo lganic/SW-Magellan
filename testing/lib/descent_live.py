@@ -80,10 +80,22 @@ def calculate_trajectory(
     ax.set_ylabel("y")
     ax.set_title("Trajectory with Control Vectors")
     ax.grid(True)
-    ax.axis("equal")
+    ax.set_aspect("equal", adjustable="box")
     ax.legend()
 
-    lambda_b = 1e-3
+    # import time
+    # time.sleep(20)
+
+    lambda_b = 8e-1
+    lambda_mu = 1e-8
+    lambda_p = 1e0
+    lambda_v = 1e2
+    alpha_theta = 1e-7
+    alpha_tau = 1e-10
+    alpha_mu = 1e-9
+
+    alpha_mu = 1e-9
+
 
     iteration = 0
 
@@ -104,11 +116,13 @@ def calculate_trajectory(
 
         final_state = states[-1]
 
+        print(final_state.v)
+
         state_gradient = [
-            _sub_m2(final_state.x, end_state.x),
-            _sub_m2(final_state.y, end_state.y),
-            _sub_m2(final_state.vx, end_state.vx),
-            _sub_m2(final_state.vy, end_state.vy)
+            lambda_p * _sub_m2(final_state.x, end_state.x),
+            lambda_p * _sub_m2(final_state.y, end_state.y),
+            lambda_v * _sub_m2(final_state.vx, end_state.vx),
+            lambda_v * _sub_m2(final_state.vy, end_state.vy)
         ]
 
         lambdas = [None] * (N + 1)
@@ -166,20 +180,14 @@ def calculate_trajectory(
             grad_theta[n] += dot4(lambdas[n + 1], ds_dtheta)
             grad_tau[n] += dot4(lambdas[n + 1], ds_dtau)
 
-        lambda_mu = 1e-4
-
         for n in range(N):
             if n > 0:
                 grad_theta[n] += 2 * lambda_mu * (params.theta_n[n] - params.theta_n[n - 1]) / (params.Delta_t ** 2)
             if n < N - 1:
                 grad_theta[n] -= 2 * lambda_mu * (params.theta_n[n + 1] - params.theta_n[n]) / (params.Delta_t ** 2)
 
-        alpha_theta = 1e-8
-        alpha_tau = 1e-15
-        alpha_mu = 1e-13
-
         grad_Tf = get_tf_partial(
-            starting_state=starting_state,
+            states,
             params=params,
             lambdas = lambdas,
             engine_thrust=engine_thrust,
@@ -229,7 +237,7 @@ def calculate_trajectory(
             v,
             angles='xy',
             scale_units='xy',
-            scale=1
+            scale=.001
         )
 
         # auto-rescale axes
@@ -248,6 +256,10 @@ def calculate_trajectory(
         # for example:
         # if iteration >= 500:
         #     final_condition = True
+
+        if iteration == 2:
+            import time
+            time.sleep(20)
 
     plt.ioff()
     plt.show()
