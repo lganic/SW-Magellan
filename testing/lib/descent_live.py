@@ -4,57 +4,9 @@ from .vectors import StateVector, ParameterVector
 from .sim import sim
 from .partials import get_drag_partials, get_tf_partial
 from .obstacle import Obstacle
+from .gradient import get_gradients
 from matplotlib import pyplot as plt
 import keyboard
-
-def _sub_m2(a, b):
-    return 2 * (a - b)
-
-def multiply_column_vec(state_gradient, jacobian):
-    result = [0, 0, 0, 0]
-
-    for j in range(4):
-        total = 0
-        for i in range(4):
-            total += state_gradient[i] * jacobian[i][j]
-        result[j] = total
-
-    return result
-
-def make_jacobian(state: StateVector, delta_t: float):
-    drag_partials = get_drag_partials(state)
-
-    g = 10
-    R = (100000 / 3) * (1 + math.sqrt(10))
-
-    return [
-        [1, 0, delta_t, 0],
-        [0, 1, 0, delta_t],
-        [0, 0, 1 + delta_t * drag_partials[0], delta_t * drag_partials[1]],
-        [0, delta_t * (2 * g * R * R / math.pow(state.y + R, 3)), delta_t * (1e-2 + drag_partials[2]), 1 + delta_t * drag_partials[3]],
-    ]
-
-def dot4(a, b):
-    return sum(x * y for x, y in zip(a, b))
-
-def thrust_accel(tau, mass, engine_thrust):
-
-    return tau * engine_thrust / mass
-
-def dthrust_dtau(
-    tau: float,
-    mass: float,
-    engine_thrust: float,
-    delta_t: float,
-    fuel_consumption_rate: float,
-    fuel_density: float,
-    include_same_step_mass_dependence: bool = True,
-):
-    if not include_same_step_mass_dependence:
-        return engine_thrust / mass
-
-    dM_dtau = -fuel_density * fuel_consumption_rate * delta_t
-    return (engine_thrust / mass) - (tau * engine_thrust / (mass * mass)) * dM_dtau
 
 def calculate_trajectory(
     starting_state: StateVector,
@@ -83,9 +35,6 @@ def calculate_trajectory(
     ax.set_aspect("equal", adjustable="box")
     ax.legend()
 
-    # import time
-    # time.sleep(20)
-
     constants = {}
 
     constants["Lambda B"] = 4e-11
@@ -96,7 +45,6 @@ def calculate_trajectory(
     constants["Alpha Theta"] = 5e-8
     constants["Alpha Tau"] = 1e-10
     constants["Alpha Mu"] = 1e-10
-    # alpha_mu = 1e-12
 
     iteration = 0
 
@@ -108,114 +56,28 @@ def calculate_trajectory(
 
         iteration += 1
 
-        states = sim(
-            starting_state=starting_state,
-            params=params,
-            engine_thrust=engine_thrust,
-            starting_mass=starting_mass,
-            fuel_consumption_rate=fuel_consumption_rate,
-            fuel_density=fuel_density
+        gradient = get_gradients(
+            starting_state = starting_state,
+            target_state = end_state,
+            params = params,
+            obstacles = obstacles,
+            N = N,
+            engine_thrust = engine_thrust,
+            starting_mass = starting_mass,
+            fuel_consumption_rate = fuel_consumption_rate,
+            fuel_density = fuel_density,
+            tuning_constants = constants
         )
 
-        final_state = states[-1]
-
-        print(final_state.v, params.Tf)
-
-        state_gradient = [
-            constants["Lambda P"] * _sub_m2(final_state.x, end_state.x),
-            constants["Lambda P"] * _sub_m2(final_state.y, end_state.y),
-            constants["Lambda V"] * _sub_m2(final_state.vx, end_state.vx),
-            constants["Lambda V"] * _sub_m2(final_state.vy, end_state.vy)
-        ]
-
-        lambdas = [None] * (N + 1)
-        lambdas[N] = state_gradient.copy()
-
-        for n in range(N - 1, -1, -1):
-
-            state_gradient = multiply_column_vec(
-                state_gradient,
-                make_jacobian(states[n], params.Delta_t)
-            )
-
-            for obstacle in obstacles:
-                gradient = obstacle.get_gradient(states[n])
-
-                state_gradient[0] += constants["Lambda B"] * gradient[0]
-                state_gradient[1] += constants["Lambda B"] * gradient[1]
-
-            lambdas[n] = state_gradient.copy()
-
-        grad_theta = [0.0] * N
-        grad_tau = [0.0] * N
-
-        masses = [state.mass for state in states]
 
         for n in range(N):
-            theta = params.theta_n[n]
-            tau = params.tau_n[n]
-            mass = masses[n]
+            params.theta_n[n] -= constants["Alpha Theta"] * gradient[n]
+            params.tau_n[n] = min(1.0, max(0.0, params.tau_n[n] - constants["Alpha Tau"] * gradient[N + n]))
 
-            a = thrust_accel(tau, mass, engine_thrust)
+        params.Mu -= constants["Alpha Mu"] * gradient[-1]
 
-            ds_dtheta = [
-                0.0,
-                0.0,
-                params.Delta_t * (-a * math.sin(theta)),
-                params.Delta_t * ( a * math.cos(theta)),
-            ]
-
-            da_dtau = dthrust_dtau(
-                tau=tau,
-                mass=mass,
-                engine_thrust=engine_thrust,
-                delta_t=params.Delta_t,
-                fuel_consumption_rate=fuel_consumption_rate,
-                fuel_density=fuel_density,
-                include_same_step_mass_dependence=True,
-            )
-
-            ds_dtau = [
-                0.0,
-                0.0,
-                params.Delta_t * math.cos(theta) * da_dtau,
-                params.Delta_t * math.sin(theta) * da_dtau,
-            ]
-
-            grad_theta[n] += dot4(lambdas[n + 1], ds_dtheta)
-            grad_tau[n] += dot4(lambdas[n + 1], ds_dtau)
-
-        for n in range(N):
-            if n > 0:
-                grad_theta[n] += 2 * constants["Lambda Mu"] * (params.theta_n[n] - params.theta_n[n - 1]) / (params.Delta_t ** 2)
-            if n < N - 1:
-                grad_theta[n] -= 2 * constants["Lambda Mu"] * (params.theta_n[n + 1] - params.theta_n[n]) / (params.Delta_t ** 2)
-
-        grad_Tf = get_tf_partial(
-            states,
-            params=params,
-            lambdas = lambdas,
-            engine_thrust=engine_thrust,
-            starting_mass=starting_mass,
-            fuel_consumption_rate=fuel_consumption_rate,
-            fuel_density=fuel_density
-        )
-
-        smooth_sum = 0.0
-
-        for n in range(1, N):
-            dtheta = params.theta_n[n] - params.theta_n[n - 1]
-            smooth_sum += dtheta * dtheta
-
-        grad_Tf += constants["Lambda Mu"] * (-2.0 * smooth_sum / (params.Delta_t ** 3)) * (1.0 / N)
-
-        grad_mu = params.Tf * grad_Tf
-
-        for n in range(N):
-            params.theta_n[n] -= constants["Alpha Theta"] * grad_theta[n]
-            params.tau_n[n] = min(1.0, max(0.0, params.tau_n[n] - constants["Alpha Tau"] * grad_tau[n]))
-
-        params.Mu -= constants["Alpha Mu"] * grad_mu
+        # This state check is purely for the graph, it is not needed for gradients
+        states = sim(starting_state, params, engine_thrust, starting_mass, fuel_consumption_rate, fuel_density)
 
         # --- update live preview ---
         x = [s.x for s in states]
@@ -280,15 +142,6 @@ def calculate_trajectory(
         fig.canvas.draw()
         fig.canvas.flush_events()
         plt.pause(0.01)
-
-        # TODO: replace with your real stopping condition
-        # for example:
-        # if iteration >= 500:
-        #     final_condition = True
-
-        # if iteration == 2:
-        #     import time
-        #     time.sleep(20)
 
     plt.ioff()
     plt.show()
