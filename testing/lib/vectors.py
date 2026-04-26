@@ -34,7 +34,7 @@ class StateVector:
 
 class ParameterVector:
 
-    def __init__(self, number_of_elements, starting_angle = math.pi / 2, starting_throttle = 1, starting_time = 1 * 60):
+    def __init__(self, number_of_elements, starting_angle = math.pi / 2, starting_throttle = 1, starting_time = 15 * 60):
 
         '''
         Create a state vector with a given size.
@@ -51,7 +51,13 @@ class ParameterVector:
     @property
     def Tf(self):
 
-        return math.pow(math.e, self.Mu)
+        try:
+            return math.pow(math.e, self.Mu)
+        except OverflowError:
+            print(self.Mu)
+            raise OverflowError("Mu too big")
+
+
     
     @property
     def Delta_t(self):

@@ -86,18 +86,19 @@ def calculate_trajectory(
     # import time
     # time.sleep(20)
 
-    lambda_b = 8e-1
-    lambda_mu = 1e-8
-    lambda_p = 1e0
-    lambda_v = 1e2
-    alpha_theta = 1e-7
+    lambda_b = 4e-11
+    lambda_b = 4e-9
+    lambda_mu = 1e-3
+    lambda_p = 1e-2
+    lambda_v = 3e2
+    alpha_theta = 5e-8
     alpha_tau = 1e-10
-    alpha_mu = 1e-9
-
-    alpha_mu = 1e-9
-
+    alpha_mu = 1e-10
+    # alpha_mu = 1e-12
 
     iteration = 0
+
+    obstacle_patches = []
 
     while not final_condition:
 
@@ -116,7 +117,7 @@ def calculate_trajectory(
 
         final_state = states[-1]
 
-        print(final_state.v)
+        print(final_state.v, params.Tf)
 
         state_gradient = [
             lambda_p * _sub_m2(final_state.x, end_state.x),
@@ -129,6 +130,7 @@ def calculate_trajectory(
         lambdas[N] = state_gradient.copy()
 
         for n in range(N - 1, -1, -1):
+
             state_gradient = multiply_column_vec(
                 state_gradient,
                 make_jacobian(states[n], params.Delta_t)
@@ -136,6 +138,7 @@ def calculate_trajectory(
 
             for obstacle in obstacles:
                 gradient = obstacle.get_gradient(states[n])
+
                 state_gradient[0] += lambda_b * gradient[0]
                 state_gradient[1] += lambda_b * gradient[1]
 
@@ -230,6 +233,10 @@ def calculate_trajectory(
         if quiver is not None:
             quiver.remove()
 
+        for p in obstacle_patches:
+            p.remove()
+        obstacle_patches.clear()
+
         quiver = ax.quiver(
             x_q,
             y_q,
@@ -237,16 +244,28 @@ def calculate_trajectory(
             v,
             angles='xy',
             scale_units='xy',
-            scale=.001
+            scale=.00001
         )
 
         # auto-rescale axes
         if x and y:
-            pad_x = max(1.0, 0.05 * max(1.0, max(x) - min(x)))
-            pad_y = max(1.0, 0.05 * max(1.0, max(y) - min(y)))
-            ax.set_xlim(min(x) - pad_x, max(x) + pad_x)
-            ax.set_ylim(min(y) - pad_y, max(y) + pad_y)
 
+            min_x = min(x)
+            max_x = max(x)
+
+            min_y = min(y)
+            max_y = max(y)
+
+            pad_x = max(1.0, 0.05 * max(1.0, max_x - min_x))
+            pad_y = max(1.0, 0.05 * max(1.0, max_y - min_y))
+            ax.set_xlim(min_x - pad_x, max_x + pad_x)
+            ax.set_ylim(min_y - pad_y, max_y + pad_y)
+
+            for o in obstacles:
+                patch = o.get_patch(min_x - pad_x, max_x + pad_x, min_y - pad_y, max_y + pad_y)
+                ax.add_patch(patch)
+                obstacle_patches.append(patch)
+        
         ax.set_title(f"Trajectory with Control Vectors (iteration {iteration})")
         fig.canvas.draw()
         fig.canvas.flush_events()
@@ -257,9 +276,9 @@ def calculate_trajectory(
         # if iteration >= 500:
         #     final_condition = True
 
-        if iteration == 2:
-            import time
-            time.sleep(20)
+        # if iteration == 2:
+        #     import time
+        #     time.sleep(20)
 
     plt.ioff()
     plt.show()

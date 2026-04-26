@@ -1,9 +1,20 @@
 from lib.vectors import StateVector
 from lib.descent_live import calculate_trajectory
-from lib.obstacle import Ground
+from lib.obstacle import Ground, RightBasicIntersect, LeftBasicIntersect, BothBasicIntersect, LeftComplexIntersect, RightComplexIntersect, BothComplexIntersect, EllipseIntersect
 
-sv = StateVector(0, 0, 0, 0)
+sv = StateVector(0, 0, 0, 500)
 
-tv = StateVector(10000, 30000, 0, 0)
+tv = StateVector(200000, 300000, 0, 0)
+tv = StateVector(30000, 300000, 0, 0)
 
-calculate_trajectory(sv, tv, [Ground()], 100, 200000, 4500, 1, 1)
+obstacles = [
+    Ground(),
+    LeftBasicIntersect(-128000, 40000),
+    LeftComplexIntersect(-40000, 128000, 40000),
+    BothComplexIntersect(40000, 128000, 128000, 40000),
+    BothBasicIntersect(128000, 184000, 128000),
+    RightBasicIntersect(216000, 128000),
+    EllipseIntersect(100000,  128000, 60000, 60000)
+]
+
+calculate_trajectory(sv, tv, obstacles, 500, 200000, 4500, 0 , 1)
