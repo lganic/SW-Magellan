@@ -199,10 +199,6 @@ def calculate_trajectory(
             fuel_density=fuel_density
         )
 
-        for n in range(N):
-            params.theta_n[n] -= alpha_theta * grad_theta[n]
-            params.tau_n[n] = min(1.0, max(0.0, params.tau_n[n] - alpha_tau * grad_tau[n]))
-
         smooth_sum = 0.0
 
         for n in range(1, N):
@@ -212,6 +208,10 @@ def calculate_trajectory(
         grad_Tf += lambda_mu * (-2.0 * smooth_sum / (params.Delta_t ** 3)) * (1.0 / N)
 
         grad_mu = params.Tf * grad_Tf
+
+        for n in range(N):
+            params.theta_n[n] -= alpha_theta * grad_theta[n]
+            params.tau_n[n] = min(1.0, max(0.0, params.tau_n[n] - alpha_tau * grad_tau[n]))
 
         params.Mu -= alpha_mu * grad_mu
 
