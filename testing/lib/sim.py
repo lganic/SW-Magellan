@@ -3,6 +3,7 @@ This file defines forward simulation logic.
 '''
 
 import math
+import autograd.numpy as np
 from .vectors import StateVector, ParameterVector
 from .forces import field, drag
 
@@ -21,8 +22,8 @@ def sim(starting_state: StateVector, params: ParameterVector, engine_thrust: flo
 
         thrust_mag = throttle * engine_thrust / current_mass
 
-        a_x_thrust = thrust_mag * math.cos(theta)
-        a_y_thrust = thrust_mag * math.sin(theta)
+        a_x_thrust = thrust_mag * np.cos(theta)
+        a_y_thrust = thrust_mag * np.sin(theta)
 
         a_x_field, a_y_field = field(current_state)
 

@@ -1,4 +1,5 @@
-import math
+import autograd.numpy as np
+from autograd import grad
 from typing import Tuple
 from matplotlib.patches import Patch, Rectangle, Ellipse
 from .vectors import StateVector
@@ -21,7 +22,7 @@ def acg(grad):
 
     def clip(x):
 
-        return min(1e10, max(-1e10, x))
+        return np.minimum(1e10, np.maximum(-1e10, x))
     
     return (clip(grad[0]), clip(grad[1]))
 
@@ -32,7 +33,7 @@ class Ground(Obstacle):
 
     def get_penalty(self, state: StateVector):
         
-        return math.pow(max(0, -state.y), 2)
+        return np.power(np.maximum(0, -state.y), 2)
     
     def get_gradient(self, state: StateVector):
 
@@ -60,7 +61,7 @@ class RightBasicIntersect(Obstacle):
 
     def get_penalty(self, state: StateVector):
         
-        return math.pow(max(0, self.y - state.y), 2) * math.pow(max(0, self.x - state.x), 2)
+        return np.power(np.maximum(0, self.y - state.y), 2) * np.power(np.maximum(0, self.x - state.x), 2)
 
     def get_gradient(self, state: StateVector):
 
@@ -69,8 +70,8 @@ class RightBasicIntersect(Obstacle):
             return (0.0, 0.0)
         
         return acg((
-            2 * math.pow(self.y - state.y, 2) * (state.x - self.x),
-            -2 * math.pow(state.x - self.x, 2) * (self.y - state.y)
+            2 * np.power(self.y - state.y, 2) * (state.x - self.x),
+            -2 * np.power(state.x - self.x, 2) * (self.y - state.y)
         ))
     
     def get_patch(self, xmin, xmax, ymin, ymax) -> Patch:
@@ -92,8 +93,8 @@ class LeftBasicIntersect(Obstacle):
 
     def get_penalty(self, state: StateVector):
         return (
-            math.pow(max(0, self.y - state.y), 2)
-            * math.pow(max(0, self.x - state.x), 2)
+            np.power(np.maximum(0, self.y - state.y), 2)
+            * np.power(np.maximum(0, self.x - state.x), 2)
         )
 
     def get_gradient(self, state: StateVector):
@@ -106,8 +107,8 @@ class LeftBasicIntersect(Obstacle):
         dy = self.y - state.y
 
         return acg((
-            -2 * dx * math.pow(dy, 2),
-            -2 * math.pow(dx, 2) * dy
+            -2 * dx * np.power(dy, 2),
+            -2 * np.power(dx, 2) * dy
         ))
 
     def get_patch(self, xmin, xmax, ymin, ymax) -> Patch:
@@ -128,9 +129,9 @@ class BothBasicIntersect(Obstacle):
 
     def get_penalty(self, state: StateVector):
         return (
-            math.pow(max(0, state.x - self.xl), 2)
-            * math.pow(max(0, self.xr - state.x), 2)
-            * math.pow(max(0, self.y - state.y), 2)
+            np.power(np.maximum(0, state.x - self.xl), 2)
+            * np.power(np.maximum(0, self.xr - state.x), 2)
+            * np.power(np.maximum(0, self.y - state.y), 2)
         )
 
     def get_gradient(self, state: StateVector):
@@ -171,9 +172,9 @@ class RightComplexIntersect(Obstacle):
 
     def get_penalty(self, state: StateVector):
         return (
-            math.pow(max(0, state.x - self.x), 2)
-            * math.pow(max(0, self.y_top - state.y), 2)
-            * math.pow(max(0, state.y - self.y_bottom), 2)
+            np.power(np.maximum(0, state.x - self.x), 2)
+            * np.power(np.maximum(0, self.y_top - state.y), 2)
+            * np.power(np.maximum(0, state.y - self.y_bottom), 2)
         )
 
     def get_gradient(self, state: StateVector):
@@ -208,9 +209,9 @@ class LeftComplexIntersect(Obstacle):
 
     def get_penalty(self, state: StateVector):
         return (
-            math.pow(max(0, self.x - state.x), 2)
-            * math.pow(max(0, self.y_top - state.y), 2)
-            * math.pow(max(0, state.y - self.y_bottom), 2)
+            np.power(np.maximum(0, self.x - state.x), 2)
+            * np.power(np.maximum(0, self.y_top - state.y), 2)
+            * np.power(np.maximum(0, state.y - self.y_bottom), 2)
         )
 
     def get_gradient(self, state: StateVector):
@@ -246,10 +247,10 @@ class BothComplexIntersect(Obstacle):
 
     def get_penalty(self, state: StateVector):
         return (
-            math.pow(max(0, state.x - self.xl), 2)
-            * math.pow(max(0, self.xr - state.x), 2)
-            * math.pow(max(0, self.y_top - state.y), 2)
-            * math.pow(max(0, state.y - self.y_bottom), 2)
+            np.power(np.maximum(0, state.x - self.xl), 2)
+            * np.power(np.maximum(0, self.xr - state.x), 2)
+            * np.power(np.maximum(0, self.y_top - state.y), 2)
+            * np.power(np.maximum(0, state.y - self.y_bottom), 2)
         )
 
     def get_gradient(self, state: StateVector):
@@ -313,7 +314,7 @@ class EllipseIntersect(Obstacle):
         if q <= 1e-12:
             q = 1e-12
 
-        return math.pow(max(0, (1 / q) - 1), 2)
+        return np.power(np.maximum(0, (1 / q) - 1), 2)
 
     def get_gradient(self, state: StateVector):
         dx = state.x - self.ex

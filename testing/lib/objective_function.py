@@ -1,4 +1,5 @@
 import math
+import autograd.numpy as np
 from typing import List, Dict
 from .vectors import StateVector, ParameterVector
 from .sim import sim
@@ -60,3 +61,77 @@ def objective_function(
             total_penalty += obstacle.get_penalty(state)
 
     return total_penalty
+
+def pack_params(params: ParameterVector) -> np.ndarray:
+    return np.concatenate([
+        np.array(params.theta_n),
+        np.array(params.tau_n),
+        np.array([params.Mu]),
+    ])
+
+
+def unpack_params(x: np.ndarray, N: int) -> ParameterVector:
+    params = ParameterVector(N)
+
+    params.theta_n = x[:N]
+    params.tau_n = x[N:2*N]
+
+    # Keep tau bounded smoothly-ish through optimizer bounds instead
+    params.Mu = x[-1]
+
+    return params
+
+def make_autograd_objective(
+    starting_state,
+    target_state,
+    obstacles,
+    N,
+    engine_thrust,
+    starting_mass,
+    fuel_consumption_rate,
+    fuel_density,
+    tuning_constants,
+):
+    def f(x):
+        params = unpack_params(x, N)
+
+        total_penalty = 0.0
+
+        # Tf = exp(Mu), assuming your ParameterVector does this already.
+        # If not, use:
+        # params.Tf = np.exp(params.Mu)
+        total_penalty = total_penalty + params.Tf
+
+        states = sim(
+            starting_state,
+            params,
+            engine_thrust,
+            starting_mass,
+            fuel_consumption_rate,
+            fuel_density,
+        )
+
+        final_state = states[-1]
+
+        total_penalty = total_penalty + tuning_constants["Lambda P"] * (
+            (final_state.x - target_state.x) ** 2
+            + (final_state.y - target_state.y) ** 2
+        )
+
+        total_penalty = total_penalty + tuning_constants["Lambda V"] * (
+            (final_state.vx - target_state.vx) ** 2
+            + (final_state.vy - target_state.vy) ** 2
+        )
+
+        for n in range(1, N):
+            angle_delta = params.theta_n[n - 1] - params.theta_n[n]
+            angle_rate = angle_delta / params.Delta_t
+            total_penalty = total_penalty + tuning_constants["Lambda Mu"] * angle_rate ** 2
+
+        for state in states:
+            for obstacle in obstacles:
+                total_penalty = total_penalty + obstacle.get_penalty(state)
+
+        return total_penalty
+
+    return f

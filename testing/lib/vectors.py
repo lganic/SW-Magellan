@@ -3,6 +3,7 @@ This file defines the state vector format, as well as the parameter vector forma
 '''
 
 import math
+import autograd.numpy as np
 
 class StateVector:
 
@@ -26,7 +27,7 @@ class StateVector:
     @property
     def v(self):
         # TODO: optimize
-        return math.sqrt(math.pow(self.vx, 2) + math.pow(self.vy, 2))
+        return np.sqrt(np.power(self.vx, 2) + np.power(self.vy, 2))
 
     def __repr__(self):
 
@@ -46,13 +47,13 @@ class ParameterVector:
         self.tau_n = [starting_throttle] * number_of_elements
 
         # self.Tf = starting_time
-        self.Mu = math.log(starting_time)
+        self.Mu = np.log(starting_time)
 
     @property
     def Tf(self):
 
         try:
-            return math.pow(math.e, self.Mu)
+            return np.power(np.e, self.Mu)
         except OverflowError:
             print(self.Mu)
             raise OverflowError("Mu too big")
