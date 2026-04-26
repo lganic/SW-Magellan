@@ -228,6 +228,14 @@ def calculate_trajectory(
         x_q = x[:-1]
         y_q = y[:-1]
 
+        def s(k):
+
+            for i in range(len(k)):
+                if i % 10 != 0:
+                    continue
+
+                yield k[i]
+
         trajectory_line.set_data(x, y)
 
         if quiver is not None:
@@ -238,10 +246,10 @@ def calculate_trajectory(
         obstacle_patches.clear()
 
         quiver = ax.quiver(
-            x_q,
-            y_q,
-            u,
-            v,
+            list(s(x_q)),
+            list(s(y_q)),
+            list(s(u)),
+            list(s(v)),
             angles='xy',
             scale_units='xy',
             scale=.00001
