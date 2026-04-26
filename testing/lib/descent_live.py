@@ -2,7 +2,6 @@ import math
 from typing import List
 from .vectors import StateVector, ParameterVector
 from .sim import sim
-from .partials import get_drag_partials, get_tf_partial
 from .obstacle import Obstacle
 from .gradient import get_gradients
 from matplotlib import pyplot as plt
