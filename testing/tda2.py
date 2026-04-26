@@ -4,8 +4,7 @@ from lib.obstacle import Ground, RightBasicIntersect, LeftBasicIntersect, BothBa
 
 sv = StateVector(0, 0, 0, 500)
 
-tv = StateVector(200000, 300000, 0, 0)
-tv = StateVector(30000, 300000, 0, 0)
+tv = StateVector(200000, 80000, 0, 0)
 
 obstacles = [
     Ground(),
