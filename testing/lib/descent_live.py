@@ -4,6 +4,7 @@ from .vectors import StateVector, ParameterVector
 from .sim import sim
 from .obstacle import Obstacle
 from .gradient import get_gradients
+from .objective_function import objective_function
 from matplotlib import pyplot as plt
 import keyboard
 
@@ -49,6 +50,8 @@ def calculate_trajectory(
 
     obstacle_patches = []
 
+    all_objective_losses = []
+
     while not final_condition:
 
         final_condition = keyboard.is_pressed('q')
@@ -74,6 +77,11 @@ def calculate_trajectory(
             params.tau_n[n] = min(1.0, max(0.0, params.tau_n[n] - constants["Alpha Tau"] * gradient[N + n]))
 
         params.Mu -= constants["Alpha Mu"] * gradient[-1]
+
+        objective = objective_function(starting_state, end_state, params, obstacles, N, engine_thrust, starting_mass, fuel_consumption_rate, fuel_density, constants)
+
+        all_objective_losses.append(objective)
+        print("Objective: ", objective)
 
         # This state check is purely for the graph, it is not needed for gradients
         states = sim(starting_state, params, engine_thrust, starting_mass, fuel_consumption_rate, fuel_density)
@@ -143,4 +151,9 @@ def calculate_trajectory(
         plt.pause(0.01)
 
     plt.ioff()
+    plt.show()
+
+    plt.figure()
+    plt.plot(all_objective_losses[2:]) # Skip the first 2 iterations, cause for some reason that I don't entirely know, they tend to be super small?
+    plt.title("Objective Function vs Iteration")
     plt.show()
