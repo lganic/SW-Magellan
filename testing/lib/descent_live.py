@@ -86,14 +86,16 @@ def calculate_trajectory(
     # import time
     # time.sleep(20)
 
-    lambda_b = 4e-11
-    lambda_b = 4e-9
-    lambda_mu = 1e-3
-    lambda_p = 1e-2
-    lambda_v = 3e2
-    alpha_theta = 5e-8
-    alpha_tau = 1e-10
-    alpha_mu = 1e-10
+    constants = {}
+
+    constants["Lambda B"] = 4e-11
+    constants["Lambda B"] = 4e-9
+    constants["Lambda Mu"] = 1e-3
+    constants["Lambda P"] = 1e-2
+    constants["Lambda V"] = 3e2
+    constants["Alpha Theta"] = 5e-8
+    constants["Alpha Tau"] = 1e-10
+    constants["Alpha Mu"] = 1e-10
     # alpha_mu = 1e-12
 
     iteration = 0
@@ -120,10 +122,10 @@ def calculate_trajectory(
         print(final_state.v, params.Tf)
 
         state_gradient = [
-            lambda_p * _sub_m2(final_state.x, end_state.x),
-            lambda_p * _sub_m2(final_state.y, end_state.y),
-            lambda_v * _sub_m2(final_state.vx, end_state.vx),
-            lambda_v * _sub_m2(final_state.vy, end_state.vy)
+            constants["Lambda P"] * _sub_m2(final_state.x, end_state.x),
+            constants["Lambda P"] * _sub_m2(final_state.y, end_state.y),
+            constants["Lambda V"] * _sub_m2(final_state.vx, end_state.vx),
+            constants["Lambda V"] * _sub_m2(final_state.vy, end_state.vy)
         ]
 
         lambdas = [None] * (N + 1)
@@ -139,8 +141,8 @@ def calculate_trajectory(
             for obstacle in obstacles:
                 gradient = obstacle.get_gradient(states[n])
 
-                state_gradient[0] += lambda_b * gradient[0]
-                state_gradient[1] += lambda_b * gradient[1]
+                state_gradient[0] += constants["Lambda B"] * gradient[0]
+                state_gradient[1] += constants["Lambda B"] * gradient[1]
 
             lambdas[n] = state_gradient.copy()
 
@@ -185,9 +187,9 @@ def calculate_trajectory(
 
         for n in range(N):
             if n > 0:
-                grad_theta[n] += 2 * lambda_mu * (params.theta_n[n] - params.theta_n[n - 1]) / (params.Delta_t ** 2)
+                grad_theta[n] += 2 * constants["Lambda Mu"] * (params.theta_n[n] - params.theta_n[n - 1]) / (params.Delta_t ** 2)
             if n < N - 1:
-                grad_theta[n] -= 2 * lambda_mu * (params.theta_n[n + 1] - params.theta_n[n]) / (params.Delta_t ** 2)
+                grad_theta[n] -= 2 * constants["Lambda Mu"] * (params.theta_n[n + 1] - params.theta_n[n]) / (params.Delta_t ** 2)
 
         grad_Tf = get_tf_partial(
             states,
@@ -205,15 +207,15 @@ def calculate_trajectory(
             dtheta = params.theta_n[n] - params.theta_n[n - 1]
             smooth_sum += dtheta * dtheta
 
-        grad_Tf += lambda_mu * (-2.0 * smooth_sum / (params.Delta_t ** 3)) * (1.0 / N)
+        grad_Tf += constants["Lambda Mu"] * (-2.0 * smooth_sum / (params.Delta_t ** 3)) * (1.0 / N)
 
         grad_mu = params.Tf * grad_Tf
 
         for n in range(N):
-            params.theta_n[n] -= alpha_theta * grad_theta[n]
-            params.tau_n[n] = min(1.0, max(0.0, params.tau_n[n] - alpha_tau * grad_tau[n]))
+            params.theta_n[n] -= constants["Alpha Theta"] * grad_theta[n]
+            params.tau_n[n] = min(1.0, max(0.0, params.tau_n[n] - constants["Alpha Tau"] * grad_tau[n]))
 
-        params.Mu -= alpha_mu * grad_mu
+        params.Mu -= constants["Alpha Mu"] * grad_mu
 
         # --- update live preview ---
         x = [s.x for s in states]
