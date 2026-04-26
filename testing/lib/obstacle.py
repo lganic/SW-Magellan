@@ -60,7 +60,7 @@ class RightBasicIntersect(Obstacle):
 
     def get_penalty(self, state: StateVector):
         
-        return math.pow(max(0, self.y - state.y), 2) * math.pow(max(0, self.x - state.x, 2))
+        return math.pow(max(0, self.y - state.y), 2) * math.pow(max(0, self.x - state.x), 2)
 
     def get_gradient(self, state: StateVector):
 
