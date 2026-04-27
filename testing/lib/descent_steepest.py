@@ -60,6 +60,9 @@ def calculate_trajectory(
 
         iteration += 1
 
+        if iteration > 2500:
+            break
+
         gradient = get_gradients(
             starting_state = starting_state,
             target_state = end_state,
