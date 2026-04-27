@@ -244,3 +244,5 @@ def calculate_trajectory(
     plt.plot(all_objective_losses)
     plt.title("Objective Function vs Iteration")
     plt.show()
+
+    return params, iteration, all_objective_losses
