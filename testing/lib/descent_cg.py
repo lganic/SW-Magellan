@@ -17,6 +17,10 @@ def add(vec_a, vec_b):
 
     return [a + b for a, b in zip(vec_a, vec_b)]
 
+def sub(vec_a, vec_b):
+
+    return [a - b for a, b in zip(vec_a, vec_b)]
+
 def scale(vec, scalar):
 
     return [a * scalar for a in vec]
@@ -33,6 +37,10 @@ def gradient_magnitude(gradient):
 def fletcher_reeves(current_gradient, old_gradient):
 
     return gradient_magnitude(current_gradient) / gradient_magnitude(old_gradient)
+
+def polak_ribiere(current_gradient, old_gradient):
+
+    return dot(current_gradient, sub(current_gradient - old_gradient)) / gradient_magnitude(old_gradient)
 
 def calculate_trajectory(
     starting_state: StateVector,
