@@ -7,7 +7,7 @@ from .obstacle import Obstacle
 def objective_function(
         starting_state: StateVector,
         target_state: StateVector, 
-        params: ParameterVector, 
+        my_params: ParameterVector, 
         obstacles: List[Obstacle],
         N: int,
         engine_thrust: float,
@@ -19,37 +19,39 @@ def objective_function(
     total_penalty = 0
 
     # First term is just TF
-    total_penalty += params.Tf
+    total_penalty += my_params.Tf
 
     # Second term is the distance^2 from the end position to the target position.
     # For this we need the simulated path, so lets simulate it
 
-    states = sim(starting_state, params, engine_thrust, starting_mass, fuel_consumption_rate, fuel_density)
+    states = sim(starting_state, my_params, engine_thrust, starting_mass, fuel_consumption_rate, fuel_density)
 
     final_state = states[-1]
 
     # Now we can calculate the final position difference
-    total_penalty += tuning_constants["Lambda P"] *(math.pow(final_state.x - target_state.x, 2) + math.pow(final_state.y - target_state.y, 2))
+    total_penalty += tuning_constants["Lambda P"] * (math.pow(final_state.x - target_state.x, 2) + math.pow(final_state.y - target_state.y, 2))
 
     # We can also add the penalty for the final velocity difference
-    total_penalty += tuning_constants["Lambda V"] *(math.pow(final_state.vx - target_state.vx, 2) + math.pow(final_state.vy - target_state.vy, 2))
+    total_penalty += tuning_constants["Lambda V"] * (math.pow(final_state.vx - target_state.vx, 2) + math.pow(final_state.vy - target_state.vy, 2))
 
     # Now we need to add the smoothness penalty.
     # This is just the sum of the angle differences between each frame divided by delta T
 
     old_theta: float = None
     
-    for new_theta in params.theta_n:
+    for new_theta in my_params.theta_n:
 
         if old_theta is not None:
 
             angle_delta = old_theta - new_theta
 
-            angle_delta /= params.Delta_t
+            angle_delta /= my_params.Delta_t
 
             angle_delta **= 2 # squaring
 
             total_penalty += tuning_constants["Lambda Mu"] * angle_delta
+
+        old_theta = new_theta
 
     # Now we just need to add in the penalty terms for the obstacles.
 
@@ -57,6 +59,6 @@ def objective_function(
 
         for obstacle in obstacles:
 
-            total_penalty += obstacle.get_penalty(state)
+            total_penalty += tuning_constants["Lambda B"] * obstacle.get_penalty(state)
 
     return total_penalty
