@@ -1,5 +1,5 @@
 from lib.vectors import StateVector
-from lib.descent_live import calculate_trajectory
+from lib.descent_cg import calculate_trajectory
 from lib.obstacle import Ground, RightBasicIntersect, LeftBasicIntersect, BothBasicIntersect, LeftComplexIntersect, RightComplexIntersect, BothComplexIntersect, EllipseIntersect
 
 sv = StateVector(0, 0, 0, 500)
