@@ -53,7 +53,7 @@ class ParameterVector:
         return self.theta_n + self.tau_n + [self.Mu]
     
     @staticmethod
-    def unpack(self, parameter_vector):
+    def unpack(parameter_vector):
 
         N = (len(parameter_vector) - 1) // 2
 
