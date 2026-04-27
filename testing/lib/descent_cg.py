@@ -8,7 +8,6 @@ from .objective_function import objective_function
 from .non_gradient_optimizer import nelder_mead_1d
 from .golden_search import golden_search
 from matplotlib import pyplot as plt
-import keyboard
 
 def neg(vec):
     return [-a for a in vec]
@@ -55,7 +54,9 @@ def calculate_trajectory(
     starting_mass: float,
     fuel_consumption_rate: float,
     fuel_density: float,
-    beta_function
+    beta_function,
+    max_dist_error = 100,
+    max_vel_error = 5
 ):
     params = ParameterVector(N)
     final_condition = False
@@ -95,8 +96,6 @@ def calculate_trajectory(
     p_direction = None
 
     while not final_condition:
-
-        final_condition = keyboard.is_pressed('q')
 
         gradient = get_gradients(
             starting_state = starting_state,
@@ -155,7 +154,7 @@ def calculate_trajectory(
             return result
         
         # Now to find the best alpha, we just call golden search
-        alpha = golden_search(search_function, .1, 1, 1e-5) # Tuning these, as sometimes with too high an alpha it likes to jump through certain boundaries it really shouldn't. Too low an alpha and it doesn't go anywhere.
+        alpha = golden_search(search_function, .1, .8, 1e-5) # Tuning these, as sometimes with too high an alpha it likes to jump through certain boundaries it really shouldn't. Too low an alpha and it doesn't go anywhere.
 
         # Now our alpha is the optimal amount to adjust by.
 
@@ -168,8 +167,12 @@ def calculate_trajectory(
         all_objective_losses.append(objective)
         print("Objective: ", objective)
 
-        # This state check is purely for the graph, it is not needed for gradients
         states = sim(starting_state, params, engine_thrust, starting_mass, fuel_consumption_rate, fuel_density)
+
+        # Check final state for convergence condition
+        final_state = states[-1]
+
+        final_condition = math.sqrt(math.pow(final_state.x - end_state.x, 2) + math.pow(final_state.y - end_state.y, 2)) < max_dist_error and math.sqrt(math.pow(final_state.vx - end_state.vx, 2) + math.pow(final_state.vy - end_state.vy, 2)) < max_vel_error
 
         # --- update live preview ---
         x = [s.x for s in states]

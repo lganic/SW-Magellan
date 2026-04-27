@@ -6,7 +6,6 @@ from .obstacle import Obstacle
 from .gradient import get_gradients
 from .objective_function import objective_function
 from matplotlib import pyplot as plt
-import keyboard
 
 def calculate_trajectory(
     starting_state: StateVector,
@@ -17,6 +16,8 @@ def calculate_trajectory(
     starting_mass: float,
     fuel_consumption_rate: float,
     fuel_density: float,
+    max_dist_error = 100,
+    max_vel_error = 5
 ):
     params = ParameterVector(N)
     final_condition = False
@@ -83,8 +84,12 @@ def calculate_trajectory(
         all_objective_losses.append(objective)
         print("Objective: ", objective)
 
-        # This state check is purely for the graph, it is not needed for gradients
         states = sim(starting_state, params, engine_thrust, starting_mass, fuel_consumption_rate, fuel_density)
+
+        # Check final state for convergence condition
+        final_state = states[-1]
+
+        final_condition = math.sqrt(math.pow(final_state.x - end_state.x, 2) + math.pow(final_state.y - end_state.y, 2)) < max_dist_error and math.sqrt(math.pow(final_state.vx - end_state.vx, 2) + math.pow(final_state.vy - end_state.vy, 2)) < max_vel_error
 
         # --- update live preview ---
         x = [s.x for s in states]
