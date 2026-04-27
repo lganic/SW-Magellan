@@ -95,6 +95,8 @@ def calculate_trajectory(
     prev_gradient = None
     p_direction = None
 
+    states = None
+
     while not final_condition:
 
         gradient = get_gradients(
@@ -248,4 +250,4 @@ def calculate_trajectory(
     plt.title("Objective Function vs Iteration")
     plt.show()
 
-    return params, iteration, all_objective_losses
+    return states, params, iteration, all_objective_losses

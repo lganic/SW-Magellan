@@ -53,6 +53,8 @@ def calculate_trajectory(
 
     all_objective_losses = []
 
+    states = None
+
     while not final_condition:
 
         final_condition = keyboard.is_pressed('q')
@@ -163,4 +165,4 @@ def calculate_trajectory(
     plt.title("Objective Function vs Iteration")
     plt.show()
 
-    return params, iteration, all_objective_losses
+    return states, params, iteration, all_objective_losses
