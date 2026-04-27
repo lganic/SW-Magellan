@@ -34,13 +34,17 @@ def gradient_magnitude(gradient):
     # Just dot product of the gradient with itself (since l2 norm squared), so:
     return dot(gradient, gradient)
 
-def fletcher_reeves(current_gradient, old_gradient):
+def fletcher_reeves(current_gradient, old_gradient, _):
 
     return gradient_magnitude(current_gradient) / gradient_magnitude(old_gradient)
 
-def polak_ribiere(current_gradient, old_gradient):
+def polak_ribiere(current_gradient, old_gradient, _):
 
     return dot(current_gradient, sub(current_gradient, old_gradient)) / gradient_magnitude(old_gradient)
+
+def hestenes_stiefel(current_gradient, old_gradient, descent_direction):
+
+    return dot(current_gradient, sub(current_gradient, old_gradient)) / (dot(descent_direction, sub(current_gradient, old_gradient)))
 
 def calculate_trajectory(
     starting_state: StateVector,
