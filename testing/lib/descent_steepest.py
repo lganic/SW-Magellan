@@ -57,8 +57,6 @@ def calculate_trajectory(
 
     while not final_condition:
 
-        final_condition = keyboard.is_pressed('q')
-
         iteration += 1
 
         gradient = get_gradients(
