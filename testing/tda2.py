@@ -1,5 +1,5 @@
 from lib.vectors import StateVector
-from lib.descent_cg import calculate_trajectory
+from lib.descent_cg import calculate_trajectory, fletcher_reeves, polak_ribiere
 from lib.obstacle import Ground, RightBasicIntersect, LeftBasicIntersect, BothBasicIntersect, LeftComplexIntersect, RightComplexIntersect, BothComplexIntersect, EllipseIntersect
 
 sv = StateVector(0, 0, 0, 500)
@@ -16,4 +16,4 @@ obstacles = [
     EllipseIntersect(100000,  128000, 60000, 60000)
 ]
 
-calculate_trajectory(sv, tv, obstacles, 500, 200000, 4500, 0 , 1)
+calculate_trajectory(sv, tv, obstacles, 500, 200000, 4500, 0 , 1, polak_ribiere)

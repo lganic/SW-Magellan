@@ -51,6 +51,7 @@ def calculate_trajectory(
     starting_mass: float,
     fuel_consumption_rate: float,
     fuel_density: float,
+    beta_function
 ):
     params = ParameterVector(N)
     final_condition = False
@@ -119,7 +120,7 @@ def calculate_trajectory(
             # First iteration. p is just the gradient.
             p_direction = neg(gradient)
         else:
-            beta = fletcher_reeves(gradient, prev_gradient)
+            beta = beta_function(gradient, prev_gradient)
 
             candidate_direction = add(
                 neg(gradient),
