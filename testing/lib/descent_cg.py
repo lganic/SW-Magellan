@@ -120,7 +120,8 @@ def calculate_trajectory(
             # First iteration. p is just the gradient.
             p_direction = neg(gradient)
         else:
-            beta = beta_function(gradient, prev_gradient)
+            beta = beta_function(gradient, prev_gradient, p_direction)
+            beta = max(0.0, beta)
 
             candidate_direction = add(
                 neg(gradient),
@@ -150,7 +151,7 @@ def calculate_trajectory(
             return result
         
         # Now to find the best alpha, we just call golden search
-        alpha = golden_search(search_function, .1, .5, 1e-10) # Tuning these, as sometimes with too high an alpha it likes to jump through certain boundaries it really shouldn't. Too low an alpha and it doesn't go anywhere.
+        alpha = golden_search(search_function, .1, 1, 1e-5) # Tuning these, as sometimes with too high an alpha it likes to jump through certain boundaries it really shouldn't. Too low an alpha and it doesn't go anywhere.
 
         # Now our alpha is the optimal amount to adjust by.
 
