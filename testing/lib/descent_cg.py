@@ -40,7 +40,7 @@ def fletcher_reeves(current_gradient, old_gradient):
 
 def polak_ribiere(current_gradient, old_gradient):
 
-    return dot(current_gradient, sub(current_gradient - old_gradient)) / gradient_magnitude(old_gradient)
+    return dot(current_gradient, sub(current_gradient, old_gradient)) / gradient_magnitude(old_gradient)
 
 def calculate_trajectory(
     starting_state: StateVector,
