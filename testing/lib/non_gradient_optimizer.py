@@ -4,6 +4,8 @@ This file will implement a non gradient optimization technique.
 I will implement this as a single dimension Nelder Mead
 '''
 
+# NOTE: This file isn't used. I couldn't get it to work properly, so I just went back to using golden search. However I am keeping it here in case golden turns out to be terrible later
+
 # So I can be lazy:
 class FuncCache:
     def __init__(self, function):
