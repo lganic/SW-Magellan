@@ -100,7 +100,8 @@ def calculate_trajectory(
 
     while not final_condition:
 
-        final_condition = iteration > 2500
+        if iteration > 2500:
+            break
 
         gradient = get_gradients(
             starting_state = starting_state,
