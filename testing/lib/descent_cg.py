@@ -236,6 +236,6 @@ def calculate_trajectory(
     plt.show()
 
     plt.figure()
-    plt.plot(all_objective_losses[2:]) # Skip the first 2 iterations, cause for some reason that I don't entirely know, they tend to be super small?
+    plt.plot(all_objective_losses)
     plt.title("Objective Function vs Iteration")
     plt.show()
