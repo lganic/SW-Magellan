@@ -48,6 +48,27 @@ class ParameterVector:
         # self.Tf = starting_time
         self.Mu = math.log(starting_time)
 
+    def pack(self):
+
+        return self.theta_n + self.tau_n + [self.Mu]
+    
+    @staticmethod
+    def unpack(self, parameter_vector):
+
+        N = (len(parameter_vector) - 1) // 2
+
+        new_params = ParameterVector(N)
+
+        theta_n = parameter_vector[:N]
+        tau_n = parameter_vector[N: 2 * N]
+        mu = parameter_vector[2 * N]
+
+        new_params.theta_n = theta_n
+        new_params.tau_n = tau_n
+        new_params.Mu = mu
+
+        return new_params
+
     @property
     def Tf(self):
 
