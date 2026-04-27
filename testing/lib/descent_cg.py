@@ -56,7 +56,8 @@ def calculate_trajectory(
     fuel_density: float,
     beta_function,
     max_dist_error = 100,
-    max_vel_error = 5
+    max_vel_error = 5,
+    name = "Unknown"
 ):
     params = ParameterVector(N)
     final_condition = False
@@ -98,6 +99,8 @@ def calculate_trajectory(
     states = None
 
     while not final_condition:
+
+        final_condition = iteration > 2500
 
         gradient = get_gradients(
             starting_state = starting_state,
@@ -235,7 +238,7 @@ def calculate_trajectory(
                 ax.add_patch(patch)
                 obstacle_patches.append(patch)
         
-        ax.set_title(f"Trajectory with Control Vectors (iteration {iteration})")
+        ax.set_title(f"{name} Trajectory with Control Vectors (iteration {iteration})")
         fig.canvas.draw()
         fig.canvas.flush_events()
         plt.pause(0.01)
@@ -247,7 +250,7 @@ def calculate_trajectory(
 
     plt.figure()
     plt.plot(all_objective_losses)
-    plt.title("Objective Function vs Iteration")
+    plt.title(name + " Objective Function vs Iteration")
     plt.show()
 
     return states, params, iteration, all_objective_losses

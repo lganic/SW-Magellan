@@ -17,7 +17,8 @@ def calculate_trajectory(
     fuel_consumption_rate: float,
     fuel_density: float,
     max_dist_error = 100,
-    max_vel_error = 5
+    max_vel_error = 5,
+    name = "Unknown"
 ):
     params = ParameterVector(N)
     final_condition = False
@@ -31,7 +32,7 @@ def calculate_trajectory(
 
     ax.set_xlabel("x")
     ax.set_ylabel("y")
-    ax.set_title("Trajectory with Control Vectors")
+    ax.set_title(name + " Trajectory with Control Vectors")
     ax.grid(True)
     ax.set_aspect("equal", adjustable="box")
     ax.legend()
@@ -150,7 +151,7 @@ def calculate_trajectory(
                 ax.add_patch(patch)
                 obstacle_patches.append(patch)
         
-        ax.set_title(f"Trajectory with Control Vectors (iteration {iteration})")
+        ax.set_title(f"{name} Trajectory with Control Vectors (iteration {iteration})")
         fig.canvas.draw()
         fig.canvas.flush_events()
         plt.pause(0.01)
@@ -160,7 +161,7 @@ def calculate_trajectory(
 
     plt.figure()
     plt.plot(all_objective_losses[2:]) # Skip the first 2 iterations, cause for some reason that I don't entirely know, they tend to be super small?
-    plt.title("Objective Function vs Iteration")
+    plt.title(name + "Objective Function vs Iteration")
     plt.show()
 
     return states, params, iteration, all_objective_losses

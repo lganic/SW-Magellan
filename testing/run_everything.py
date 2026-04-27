@@ -30,11 +30,11 @@ def err_vel(p1: StateVector, p2: StateVector):
 def run_trial(method_name, target_name, solver_func, sv, target, obstacles, cg_beta_func=None):
     if cg_beta_func is None:
         states, params, iteration, losses = solver_func(
-            sv, target, obstacles, 500, 200000, 4500, 1, 1
+            sv, target, obstacles, 500, 200000, 4500, 1, 1, name = method_name
         )
     else:
         states, params, iteration, losses = solver_func(
-            sv, target, obstacles, 500, 200000, 4500, 1, 1, cg_beta_func
+            sv, target, obstacles, 500, 200000, 4500, 1, 1, cg_beta_func, name = method_name
         )
 
     final_state = states[-1]
